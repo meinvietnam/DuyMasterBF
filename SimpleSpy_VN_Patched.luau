@@ -1,63 +1,15 @@
-local __lt = (function()
-	local globalEnv = (getgenv and getgenv()) or _G or {};
-	local sharedEnv = rawget(_G, "shared");
-	local cacheHost = type(sharedEnv) == "table" and sharedEnv or (type(globalEnv) == "table" and globalEnv or nil);
-	if cacheHost then
-		local cached = rawget(cacheHost, "__lt_service_resolver");
-		if type(cached) == "table" then
-			return cached;
-		end;
-	end;
-	local loader = loadstring or load;
-	if type(loader) ~= "function" then
-		error("Service resolver loader unavailable");
-	end;
-	local resolver = loader(game:HttpGet("https://ltseverydayyou.github.io/ServiceResolver.luau"), "@ServiceResolver.luau");
-	if type(resolver) ~= "function" then
-		error("Service resolver failed to compile");
-	end;
-	local loaded = resolver();
-	if type(loaded) ~= "table" then
-		error("Service resolver failed to load");
-	end;
-	if cacheHost then
-		cacheHost.__lt_service_resolver = loaded;
-	end;
-	return loaded;
-end)();
-local __NAUIProtector = (function()
-	local globalEnv = (getgenv and getgenv()) or _G or {};
-	local sharedEnv = rawget(_G, "shared");
-	local cacheHost = type(sharedEnv) == "table" and sharedEnv or (type(globalEnv) == "table" and globalEnv or nil);
-	if cacheHost then
-		local cached = rawget(cacheHost, "__lt_ui_protector");
-		if type(cached) == "table" then
-			return cached;
-		end;
-	end;
-	local loader = loadstring or load;
-	if type(loader) ~= "function" then
-		return nil;
-	end;
-	local okSource, source = pcall(function()
-		return game:HttpGet("https://ltseverydayyou.github.io/UIprotector.luau");
-	end);
-	if not okSource or type(source) ~= "string" or source == "" then
-		return nil;
-	end;
-	local chunk = loader(source, "@UIprotector.luau");
-	if type(chunk) ~= "function" then
-		return nil;
-	end;
-	local okLoaded, loaded = pcall(chunk);
-	if okLoaded and type(loaded) == "table" then
-		if cacheHost then
-			cacheHost.__lt_ui_protector = loaded;
-		end;
-		return loaded;
-	end;
-	return nil;
-end)();
+local __lt = {
+    gs = function(name) return game:GetService(name) end,
+    cs = function(name, refFn)
+        local svc = game:GetService(name)
+        if type(refFn) == "function" then
+            local ok, r = pcall(refFn, svc)
+            if ok and r then return r end
+        end
+        return svc
+    end,
+};
+local __NAUIProtector = nil;
 local __NAOriginalGetHui = gethui;
 local gethui = function()
 	if __NAUIProtector and type(__NAUIProtector.huiGrabber) == "function" then
